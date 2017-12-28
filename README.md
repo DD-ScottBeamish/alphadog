@@ -7,5 +7,8 @@ https://hub.docker.com/_/golang/
 ### Command used to build the alphadog container
 docker build -t alphadog .  
 
-### Command to run Alphadog. 
+### Command to run Alphadog from local container 
 docker run -d --rm --name alphadog -p 8080:8080 alphadog
+
+### Command to run Alphadog from DockerHub
+docker run -d --rm --name alphadog -p 8080:8080 sbeamish/alphadog:latest
