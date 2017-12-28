@@ -26,7 +26,7 @@ func GetHealthCheck(w http.ResponseWriter, r *http.Request)
 
 // Encode count as json
 func GetCount(w http.ResponseWriter, r *http.Request) {
-	count++
+    count++
     json.NewEncoder(w).Encode(Counter{count})
 }
 
