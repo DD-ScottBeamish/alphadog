@@ -5,6 +5,8 @@ import (
     "github.com/gorilla/mux"
     "log"
     "net/http"
+    "fmt"
+    "strconv"
 )
 
 // Initialize Counter
@@ -20,13 +22,14 @@ type Health struct {
 }
 
 // Encode Health Check as json
-func GetHealthCheck(w http.ResponseWriter, r *http.Request)
+func GetHealthCheck(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(Health{"ok"})
 }
 
 // Encode count as json
 func GetCount(w http.ResponseWriter, r *http.Request) {
     count++
+    fmt.Println("Container Count: " + strconv.Itoa(count))
     json.NewEncoder(w).Encode(Counter{count})
 }
 
