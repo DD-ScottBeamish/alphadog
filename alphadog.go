@@ -7,6 +7,7 @@ import (
     "net/http"
     "fmt"
     "strconv"
+    "github.com/DataDog/dd-trace-go/tracer"
 )
 
 // Initialize Counter
@@ -28,9 +29,16 @@ func GetHealthCheck(w http.ResponseWriter, r *http.Request) {
 
 // Encode count as json
 func GetCount(w http.ResponseWriter, r *http.Request) {
+    // Add Datadog Tracing
+    span := tracer.NewRootSpan("http.client.request", "alphadog", "/getcount")
+    defer span.Finish()
+    
+    // bump container count
     count++
     fmt.Println("Container Count: " + strconv.Itoa(count))
     json.NewEncoder(w).Encode(Counter{count})
+
+    span.SetMeta("count", strconv.Itoa(count))
 }
 
 // main function
@@ -38,5 +46,6 @@ func main() {
     router := mux.NewRouter()
     router.HandleFunc("/getcount", GetCount).Methods("GET")
     router.HandleFunc("/healthcheck", GetHealthCheck).Methods("GET")
+
     log.Fatal(http.ListenAndServe(":8080", router))
 }
