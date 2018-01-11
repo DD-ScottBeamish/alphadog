@@ -7,7 +7,9 @@ import (
     "net/http"
     "fmt"
     "strconv"
-    "github.com/DataDog/dd-trace-go/tracer"
+    ddtrace "github.com/DataDog/dd-trace-go/opentracing"
+    opentracing "github.com/opentracing/opentracing-go"
+    logs "github.com/opentracing/opentracing-go/log"
 )
 
 // Initialize Counter
@@ -30,19 +32,35 @@ func GetHealthCheck(w http.ResponseWriter, r *http.Request) {
 // Encode count as json
 func GetCount(w http.ResponseWriter, r *http.Request) {
     // Add Datadog Tracing
-    span := tracer.NewRootSpan("http.client.request", "alphadog", "/getcount")
+    span := opentracing.StartSpan("/getcount")
     defer span.Finish()
     
-    // bump container count
+    // bump/return/log container count
     count++
     fmt.Println("Container Count: " + strconv.Itoa(count))
     json.NewEncoder(w).Encode(Counter{count})
 
-    span.SetMeta("count", strconv.Itoa(count))
+    span.LogFields(logs.Int("count", count))
 }
 
 // main function
 func main() {
+    // create a Tracer configuration
+    config := ddtrace.NewConfiguration()
+    config.ServiceName = "alphadog"
+    config.AgentHostname = "dd-agent"
+
+    // initialize a Tracer and ensure a graceful shutdown
+    // using the `closer.Close()`
+    tracer, closer, err := ddtrace.NewTracer(config)
+    if err != nil {
+        // handle the configuration error
+    }
+    defer closer.Close()
+
+    // set the Datadog tracer as a GlobalTracer
+    opentracing.SetGlobalTracer(tracer)
+
     router := mux.NewRouter()
     router.HandleFunc("/getcount", GetCount).Methods("GET")
     router.HandleFunc("/healthcheck", GetHealthCheck).Methods("GET")
